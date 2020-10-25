@@ -1,0 +1,1348 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# FIT5149 S1 2020 Assessment 2: Author Profilling\n",
+    "\n",
+    "Group Information\n",
+    "    \n",
+    "    Group No: 27\n",
+    "    Group Members\n",
+    "    Student Name: Subodh Sharma (29884446)\n",
+    "    Student Name: Anand Rane\n",
+    "    Student Name: Kshitiz Patil\n",
+    "    \n",
+    "    Programming Languages: Python 3.7 in Jupyter Notebook\n",
+    "    \n",
+    "    Python Libraries Used:\n",
+    "        - Pandas\n",
+    "        - nltk\n",
+    "        - numpy\n",
+    "        - sklearn"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Table of content\n",
+    "- Introduction\n",
+    "- Model 1\n",
+    "- Model 2 - 3\n",
+    "- Text PreProcessing\n",
+    "- Model Development"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Introduction\n",
+    "\n",
+    "The notebook contains the data the code for assessment 2, Author Profilling where we have to find the gender out of the tweets given.\n",
+    "The notebook is divided into two parts. \n",
+    "    - The first part is covered with Model 1 Implementation\n",
+    "    - The Second part is covered with Model 2 and Model 3\n",
+    "The dataset contains the raw tweets in in xml format, The details about the train label and test label are given inside the a csv file. The data is read and is stored inside a data frame. The tweets from the dataset are preprocessed and feed to different classifiers.\n",
+    "Later on the comparision is done between this classifiers based on the accuracy of the results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "\n",
+    "### DeepLearning based NLP text classification Models\n",
+    "\n",
+    "*   Simple LSTM\n",
+    "*   CNN based model (This is the highlighted one)\n",
+    "*   CNN with glove Embedding\n",
+    "\n",
+    "---\n",
+    "\n",
+    "\n",
+    "\n",
+    "### Importing the required Libraries"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# import pandas as pd\n",
+    "# import numpy as np\n",
+    "# import xml.etree.ElementTree as etree\n",
+    "# import os\n",
+    "# import re\n",
+    "# import nltk\n",
+    "# import spacy\n",
+    "# from textblob import TextBlob\n",
+    "# from nltk.corpus import stopwords\n",
+    "# from nltk.stem import WordNetLemmatizer\n",
+    "# from nltk.tokenize import RegexpTokenizer\n",
+    "# from sklearn.metrics import classification_report\n",
+    "# from keras.models import Sequential\n",
+    "# from keras.layers import Dense, Dropout, Activation, Embedding, Conv1D, Flatten\n",
+    "# from keras.preprocessing import text\n",
+    "# from sklearn.model_selection import train_test_split\n",
+    "# from keras.preprocessing.sequence import pad_sequences"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The reuqired Downloads for Stopwords and Pos Tags"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# nltk.download('stopwords')\n",
+    "# nltk.download('wordnet')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Importing the Drive where the data resides\n",
+    "\n",
+    " - Since the the code is executed on Colab the upload files are removed over every refresh"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# from google.colab import drive\n",
+    "# drive.mount('/content/drive')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "PART 1 - is the part where no intial prerocessing was conducted this was so that Glove word embeddings be used although this is not used in the final version of the model it is kept as a part of the this notebook for refrences."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ''' PART 1\n",
+    "\n",
+    "# # THIS IS TO READ THE XML\n",
+    "# #  - It was created for only non-preprocessed models\n",
+    "# #  - It is supposed to be used in conjunction with glove embeddings\n",
+    "\n",
+    "\n",
+    "# def get_function(x):\n",
+    "#   path = 'data/' + x\n",
+    "#   tree = etree.parse(path)\n",
+    "#   root = tree.getroot()\n",
+    "#   new_root = root[0]\n",
+    "#   new_list = []\n",
+    "#   for node in root[0]:\n",
+    "#     new_list.append(node.text)\n",
+    "#   return ' \\n '.join(new_list)\n",
+    "\n",
+    "\n",
+    "# '''"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ''' PART 1\n",
+    "\n",
+    "# # Having a Look at what the data looks like\n",
+    "# # Run in conjunction with the above function\n",
+    "# get_function('1a4a60942a15426c9a7ec3764e7d0ede.xml')\n",
+    "\n",
+    "# '''"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ''' PART 1\n",
+    "\n",
+    "# label_df = pd.read_csv('train_labels.csv')\n",
+    "# label_df.head()\n",
+    "# label_df.tweets = ''\n",
+    "\n",
+    "# '''"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# csvTrainData = pd.read_csv(\"drive/My Drive/NLP/train_labels.csv\")\n",
+    "# csvTrainData[\"tweets\"] = np.nan"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# for index,row in csvTrainData.iterrows():\n",
+    "#     with open(\"drive/My Drive/NLP/data/\" + row['id'] +\".xml\", encoding=\"utf8\") as xml:\n",
+    "#         print(' ') # unfortenately due to bug on colab this has to be written.\n",
+    "#         content = xml.read()\n",
+    "#         regString = re.findall('\\[CDATA\\[(.*?)\\]\\]', content)\n",
+    "#         csvTrainData['tweets'][index] = \",\".join(regString)\n",
+    "\n",
+    "# print('DONE')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# label_df = csvTrainData"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ''' PART 1\n",
+    "# # Mapping the data to dataframe\n",
+    "\n",
+    "# error = 0\n",
+    "# error_list = []\n",
+    "# for single_file in os.listdir('drive/My Drive/NLP/data'):\n",
+    "#   print(single_file)\n",
+    "#   single_match = label_df[ label_df['id'] == single_file[:-4]]\n",
+    "#   if (len(single_match)):\n",
+    "#     label_df.loc[label_df.id == single_file[:-4],'tweets'] = get_function(single_file)\n",
+    "#   else:\n",
+    "#     error += 1\n",
+    "#     error_list.append(single_file) # There is w.r.t reading all the files\n",
+    "\n",
+    "# '''"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ''' Part 1\n",
+    "\n",
+    "# # THIS IS TO CROSS CHECK THE MISSING ID'S\n",
+    "# path = 'data/717ec629ddcc209adec9cef9dee1b456.xml'\n",
+    "# tree = etree.parse(path)\n",
+    "# root = tree.getroot()\n",
+    "# new_root = root[0]\n",
+    "# for node in new_root:\n",
+    "#   #print(node.text)#,node)\n",
+    "#   node.text\n",
+    "\n",
+    "# label_df[label_df.id == '717ec629ddcc209adec9cef9dee1b456']\n",
+    "# label_df[label_df.id.str.contains('717e')]\n",
+    "\n",
+    "# '''"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# #Checking Wether some data has empty strings\n",
+    "\n",
+    "# empty = label_df[label_df['tweets']== '']\n",
+    "# temp_filtered_data = label_df[label_df['tweets'] != '']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# '''\n",
+    "# DONE:\n",
+    "# 1.) There are some data that needs some more cleaning like the one that are present without non-strings\n",
+    "# 2.) make the reasoning on why the data needs to be one sentence at a time or how\n",
+    "# 3.) Special Characters needs to be addressed\n",
+    "# 4.) Links needs to be addressed\n",
+    "# 5.) How to preprocess data before putting it into CNN\n",
+    "# 6.) Do we require all the pre-prcessing\n",
+    "# 7.) Find out the Vocab Size\n",
+    "# '''\n",
+    "# len(temp_filtered_data)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# #We need to Change the values to male and female to 0 and 1\n",
+    "# temp_filtered_data.loc[temp_filtered_data['gender'] == 'male','gender'] = 0\n",
+    "# temp_filtered_data.loc[temp_filtered_data['gender'] == 'female','gender'] = 1"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ### Preprocessing of Texts\n",
+    "\n",
+    "\n",
+    "# *   Lemmatization\n",
+    "# *   Tokenizer ( \\* Note: Only for pre-processing in this section)\n",
+    "# *   Stop Word Removal\n",
+    "# *   Removal of links and refrences\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# tokenizer = RegexpTokenizer(r\"\\W+\", gaps=True)\n",
+    "# stopwords_list = stopwords.words('english')\n",
+    "# lemmatizer = WordNetLemmatizer()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# def pre_processing(message):\n",
+    "#     tweet = re.sub(r\"(?i)\\b((?:https?://|www\\d{0,3}[.]|[a-z0-9.\\-]+[.][a-z]{2,4}/)(?:[^\\s()<>]+|\\(([^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\))+(?:\\(([^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\)|[^\\s`!()\\[\\]{};:'\\\".,<>?«»“”‘’]))\", \"\", message)\n",
+    "#     tweet = re.sub(r\"(?<=^|(?<=[^a-zA-Z0-9-_\\.]))@([A-Za-z]+[A-Za-z0-9-_]+)\", \"\", tweet)\n",
+    "#     tokens = tokenizer.tokenize(tweet)\n",
+    "#     tokens = [token.lower() for token in tokens]\n",
+    "#     removed_stopwords = [token for token in tokens if token not in stopwords_list]\n",
+    "#     lemmatizedWords = [lemmatizer.lemmatize(token) for token in removed_stopwords]\n",
+    "#     return \" \".join(lemmatizedWords)\n",
+    "\n",
+    "\n",
+    "# temp_filtered_data['tweets'] = temp_filtered_data['tweets'].map(lambda x: pre_processing(x))\n",
+    "# print(' ')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# #Having a look at how the data looks after pre-processing\n",
+    "# temp_filtered_data.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# # Making and Compiling the Model\n",
+    "\n",
+    "# - Note: this also includes the glove embedding along with it which was later removed."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ''' Part 2 GLOVE word embedding (Ref: https://medium.com/saarthi-ai/sentence-classification-using-convolutional-neural-networks-ddad72c7048c)\n",
+    "\n",
+    "# # This needs to be done in conjunction with part 1\n",
+    "\n",
+    "# def create_embedding_matrix(filepath, word_index, embedding_dim):\n",
+    "#     vocab_size = len(word_index) + 1  \n",
+    "#     embedding_matrix = np.zeros((vocab_size, embedding_dim))\n",
+    "\n",
+    "#     with open(filepath) as f:\n",
+    "#         for line in f:\n",
+    "#             word, *vector = line.split()\n",
+    "#             if word in word_index:\n",
+    "#                 idx = word_index[word] \n",
+    "#                 embedding_matrix[idx] = np.array(\n",
+    "#                                         vector, dtype=np.float32)\n",
+    "#                                         [:embedding_dim]\n",
+    "\n",
+    "#     return embedding_matrix\n",
+    "\n",
+    "# # NOTE THE EMBEDDIG MATRIX CAN BE FED BOTH TO THE LSTM AND CNN IN THE EMBEDDING LAYER\n",
+    "\n",
+    "# '''\n",
+    "\n",
+    "# ''' Part 3 LSTM\n",
+    "\n",
+    "# #Replace where the model is being compiled\n",
+    "# #Drawback slow learning rate\n",
+    "\n",
+    "# model = Sequential()\n",
+    "# model.add(Embedding(vocab_size, 100, input_length=maxlen, weights=[embedding_matrix], trainable=False))\n",
+    "# model.add(LSTM(dims, activation=\"sigmoid\"))\n",
+    "# model.add(Dense(1, activation='sigmoid'))\n",
+    "# model.compile(loss='binary_crossentropy',\n",
+    "#               optimizer='adam',\n",
+    "#               metrics=['accuracy'])\n",
+    "# '''\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# from keras.models import Sequential\n",
+    "# from keras.layers import Dense, Dropout, Activation, Embedding, Conv1D, Flatten\n",
+    "# from keras.preprocessing import text\n",
+    "# from sklearn.model_selection import train_test_split\n",
+    "# from keras.preprocessing.sequence import pad_sequences\n",
+    "\n",
+    "\n",
+    "# vocab_size = 5000\n",
+    "# maxlen = 150\n",
+    "# batchsize = 32\n",
+    "# dims = 50\n",
+    "# filters = 250\n",
+    "# kernel_size = 4\n",
+    "# hidden_dims = 250\n",
+    "# epochs = 10\n",
+    "\n",
+    "# tweets = temp_filtered_data['tweets'].values\n",
+    "# labels = temp_filtered_data['gender'].values\n",
+    "\n",
+    "# X_train,X_test, y_train, y_test = train_test_split(tweets, labels, test_size = .10 , random_state= 137)\n",
+    "# tokenizer = text.Tokenizer(num_words=5000)\n",
+    "# tokenizer.fit_on_texts(X_train)\n",
+    "\n",
+    "# X_train = tokenizer.texts_to_sequences(X_train)\n",
+    "# X_test = tokenizer.texts_to_sequences(X_test)\n",
+    "# # Adding 1 because of  reserved 0 index\n",
+    "# #vocab_size = len(tokenizer.word_index) + 1                          \n",
+    "\n",
+    "# maxlen = 100\n",
+    "\n",
+    "# X_train = pad_sequences(X_train, padding='post', maxlen=maxlen)\n",
+    "# X_test = pad_sequences(X_test, padding='post', maxlen=maxlen)\n",
+    "\n",
+    "# model = Sequential()\n",
+    "# model.add(Embedding(vocab_size,\n",
+    "#                     dims,\n",
+    "#                     input_length=maxlen))\n",
+    "# model.add(Dropout(0.5))\n",
+    "# model.add(Conv1D(filters,\n",
+    "#                  kernel_size,\n",
+    "#                  padding='valid',\n",
+    "#                  activation='relu'))\n",
+    "# model.add(Flatten())\n",
+    "# model.add(Dense(hidden_dims, activation='relu'))\n",
+    "# model.add(Dropout(0.5))\n",
+    "# model.add(Dense(1, activation='sigmoid'))\n",
+    "\n",
+    "# model.compile(loss='binary_crossentropy',\n",
+    "#               optimizer='adam',\n",
+    "#               metrics=['accuracy'])\n",
+    "\n",
+    "# model.fit(X_train, y_train,\n",
+    "#           batch_size=batchsize,\n",
+    "#           epochs=epochs,\n",
+    "#           validation_data=(X_test, y_test))\n",
+    "\n",
+    "# #tokenized = text.Tokenzier(num_words = vocab_size)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# model.summary()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# csvTestData = pd.read_csv(\"drive/My Drive/NLP/test.csv\")\n",
+    "# csvTestData[\"tweets\"] = np.nan\n",
+    "# for index,row in csvTestData.iterrows():\n",
+    "#     with open(\"drive/My Drive/NLP/data/\" + row['id'] +\".xml\", encoding=\"utf8\") as xml:\n",
+    "#         print(' ') #BUG as stated earlier\n",
+    "#         content = xml.read()\n",
+    "#         regString = re.findall('\\[CDATA\\[(.*?)\\]\\]', content)\n",
+    "#         csvTestData['tweets'][index] = \",\".join(regString)\n",
+    "\n",
+    "# print('Done')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# #csvTestData = csvTestData.drop(['language'], axis=1)\n",
+    "# csvTestData.head()\n",
+    "# csvTestData.tweets = csvTestData['tweets'].map(lambda x: pre_processing(x))\n",
+    "# #cnn_model = model.predict(csvTestData[\"tweets\"])\n",
+    "# #csvTestData = csvTestData.drop([\"tweets\"], axis=1)\n",
+    "# #csvTestData.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "### Preprocessing the data before the prediction\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# tweets = csvTestData['tweets'].values\n",
+    "# labels = csvTestData['gender'].values\n",
+    " \n",
+    "# tokenizer = text.Tokenizer(num_words=5000)\n",
+    "# tokenizer.fit_on_texts(tweets)\n",
+    "\n",
+    "# tweets = tokenizer.texts_to_sequences(tweets)\n",
+    "\n",
+    "# maxlen = 100\n",
+    "\n",
+    "# tweets = pad_sequences(tweets, padding='post', maxlen=maxlen)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# **Assigning to respective classes**\n",
+    "\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# def model_class(model_prob):\n",
+    "#   new_pred = []\n",
+    "#   for x in model_prob:\n",
+    "#     if x[0] > 0.5:\n",
+    "#       new_pred.append('male')\n",
+    "#     else:\n",
+    "#       new_pred.append('female')\n",
+    "#   return new_pred\n",
+    "# cnn_model = model.predict(tweets)\n",
+    "# gender = model_class(cnn_model)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# from sklearn.metrics import classification_report\n",
+    "# testLables = pd.read_csv(\"drive/My Drive/NLP/test_labels.csv\")\n",
+    "# testLables.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# print (classification_report(testLables.gender, gender))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Model 2 and Model 3"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 780,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#importing Libraries\n",
+    "import pandas as pd # Pandas for dataframe\n",
+    "import nltk # nltk for text processing\n",
+    "import re # regular expression to fetch the raw text\n",
+    "import numpy as np # Numpy for the array manipulation\n",
+    "from nltk.tokenize import RegexpTokenizer # Regular Expression Tokenizer\n",
+    "from nltk.corpus import stopwords # stopwords library\n",
+    "from nltk.stem import WordNetLemmatizer # Lemmatization library\n",
+    "from sklearn.feature_extraction.text import CountVectorizer # Converting Word Token into Vectors\n",
+    "from sklearn.model_selection import train_test_split # Splitting the dataset\n",
+    "from sklearn.naive_bayes import GaussianNB # Train the Gausian naive byes\n",
+    "from sklearn.ensemble import RandomForestClassifier # Train the Random Forest Classifier\n",
+    "from sklearn.model_selection import GridSearchCV # Grid Search for hyper parameter tunning\n",
+    "from sklearn.feature_extraction.text import TfidfVectorizer # Convert TF-IDF Directly to Vectors\n",
+    "from sklearn.linear_model import SGDClassifier # SGD Classifier\n",
+    "from sklearn.linear_model import LogisticRegression # Logistic Regression\n",
+    "from sklearn.naive_bayes import MultinomialNB #Multinomial Naive Bias\n",
+    "from sklearn.svm import SVC # Support Vector Machines\n",
+    "from sklearn.pipeline import Pipeline, FeatureUnion\n",
+    "from sklearn.metrics import classification_report"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 781,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Loading the dataset\n",
+    "csvTrainData = pd.read_csv(\"Assessment2_data/train_labels.csv\")\n",
+    "csvTrainData[\"tweets\"] = np.nan"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 782,
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "C:\\Users\\HPX360\\Anaconda3\\lib\\site-packages\\ipykernel_launcher.py:5: SettingWithCopyWarning: \n",
+      "A value is trying to be set on a copy of a slice from a DataFrame\n",
+      "\n",
+      "See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy\n",
+      "  \"\"\"\n",
+      "C:\\Users\\HPX360\\Anaconda3\\lib\\site-packages\\pandas\\core\\indexing.py:189: SettingWithCopyWarning: \n",
+      "A value is trying to be set on a copy of a slice from a DataFrame\n",
+      "\n",
+      "See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy\n",
+      "  self._setitem_with_indexer(indexer, value)\n"
+     ]
+    }
+   ],
+   "source": [
+    "#extracting the tweets and storing them inside the dataframe\n",
+    "for index,row in csvTrainData.iterrows():\n",
+    "    with open(\"Assessment2_data/data/\" + row['id'] +\".xml\", encoding=\"utf8\") as xml:\n",
+    "        content = xml.read()\n",
+    "        regString = re.findall('\\[CDATA\\[(.*?)\\]\\]', content)\n",
+    "        csvTrainData['tweets'][index] = \",\".join(regString)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 784,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Splitting the dataset into train and test dataset\n",
+    "X_train, X_test, y_train, y_test = train_test_split(csvTrainData.tweets, csvTrainData.gender, test_size=0.20, random_state=100)\n",
+    "name = csvTrainData.gender.name"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Preprocessing"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 785,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "tokenizer = RegexpTokenizer(r\"\\W+\", gaps=True) # Regular Expression tokeniser\n",
+    "stopwords_list = stopwords.words('english') # Removing Stop Words\n",
+    "lemmatizer = WordNetLemmatizer() # Lemmatizer instance"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 791,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#splitting the tweets and taking processed tokens\n",
+    "def split_into_lemmas(message):\n",
+    "     # Remove URLS     \n",
+    "    tweet = re.sub(r\"(?i)\\b((?:https?://|www\\d{0,3}[.]|[a-z0-9.\\-]+[.][a-z]{2,4}/)(?:[^\\s()<>]+|\\(([^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\))+(?:\\(([^\\s()<>]+|(\\([^\\s()<>]+\\)))*\\)|[^\\s`!()\\[\\]{};:'\\\".,<>?«»“”‘’]))\", \"\", message)\n",
+    "    # Remove User Mentions from tweets\n",
+    "    tweet = re.sub(r\"(?<=^|(?<=[^a-zA-Z0-9-_\\.]))@([A-Za-z]+[A-Za-z0-9-_]+)\", \"\", tweet)\n",
+    "    # Splitting combined word into two if present in hashtags\n",
+    "    tweet = \" \".join(re.findall('[A-Z][^A-Z]*', tweet))\n",
+    "    # Shortening the words with repeated characters\n",
+    "    tweet =  \"\".join(\"\".join(s)[:2] for _, s in itertools.groupby(tweet))\n",
+    "    # tokenizing the tweet\n",
+    "    tokens = tokenizer.tokenize(tweet)\n",
+    "    # Lowering the tokens\n",
+    "    tokens = [token.lower() for token in tokens]\n",
+    "    # Removing the stopwords\n",
+    "    removed_stopwords = [token for token in tokens if token not in stopwords_list]\n",
+    "    #Lemmatizing the tokens\n",
+    "    lemmatizedWords = [lemmatizer.lemmatize(token) for token in removed_stopwords]\n",
+    "    # Taking Unique number of tokens\n",
+    "    unique_words = set([word for word in lemmatizedWords if word.isalpha()])\n",
+    "    # Ignoring the words with less than 1 count\n",
+    "    return [word for word in unique_words if len(word) > 1]\n",
+    "\n",
+    "# Taking out the Parts of Speech Tags\n",
+    "def pos_tags(message):\n",
+    "    words = split_into_lemmas(message)\n",
+    "    return [tag for(word, tag) in nltk.pos_tag(words)]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Tf-Idf Vectorizer and Creating pipeline for Model Fitting.\n",
+    "Steps involved in creating pipeline.\n",
+    "    - The preprocessed Tweets are feed tot the TFIDF-Vectorizer function which in turns gives us the TFIDF Vectors\n",
+    "No of features\n",
+    "    - Words Unigram, Bigram, Trigram, Fourgram , TF-IDF of all, Removing stopwords\n",
+    "    - Character Bigram, Trigram, Fourgram, TF-IDF of all, Removing stopwords\n",
+    "    - Parts of speech Unigram and Bigram, TF only Removing\n",
+    "    We are removing Words, Charcters and Parts of speech which are present in all the "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 793,
+   "metadata": {
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Pipeline(memory=None,\n",
+       "         steps=[('u1',\n",
+       "                 FeatureUnion(n_jobs=None,\n",
+       "                              transformer_list=[('tfdif_features',\n",
+       "                                                 Pipeline(memory=None,\n",
+       "                                                          steps=[('cv',\n",
+       "                                                                  TfidfVectorizer(analyzer=<function split_into_lemmas at 0x0000021999B9C620>,\n",
+       "                                                                                  binary=False,\n",
+       "                                                                                  decode_error='strict',\n",
+       "                                                                                  dtype=<class 'numpy.float64'>,\n",
+       "                                                                                  encoding='utf-8',\n",
+       "                                                                                  input='content',\n",
+       "                                                                                  lowercase=True,\n",
+       "                                                                                  max_df=1.0,\n",
+       "                                                                                  max_features=None,\n",
+       "                                                                                  min_df=...\n",
+       "                ('clf',\n",
+       "                 SGDClassifier(alpha=0.0001, average=False, class_weight=None,\n",
+       "                               early_stopping=False, epsilon=0.1, eta0=0.0,\n",
+       "                               fit_intercept=True, l1_ratio=0.15,\n",
+       "                               learning_rate='optimal', loss='hinge',\n",
+       "                               max_iter=1000, n_iter_no_change=5, n_jobs=-1,\n",
+       "                               penalty='l2', power_t=0.5, random_state=None,\n",
+       "                               shuffle=True, tol=0.001, validation_fraction=0.1,\n",
+       "                               verbose=0, warm_start=False))],\n",
+       "         verbose=False)"
+      ]
+     },
+     "execution_count": 793,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "text_clf_SGDClassifier = Pipeline([\n",
+    "    ('u1', FeatureUnion([\n",
+    "        ('tfdif_features', Pipeline([\n",
+    "            ('cv', TfidfVectorizer(analyzer=split_into_lemmas, \n",
+    "                        ngram_range=(1,4), stop_words='english',lowercase=True, max_df = 1.0)),\n",
+    "        ])),\n",
+    "        ('tfdif_char', Pipeline([\n",
+    "            ('cv', TfidfVectorizer(analyzer='char',\n",
+    "                        ngram_range=(2,4), stop_words='english',lowercase=True, max_df = 1.0)),\n",
+    "        ])),\n",
+    "        ('tfdif_posTags', Pipeline([\n",
+    "            ('cv', TfidfVectorizer(analyzer=pos_tags, \n",
+    "                        ngram_range=(1,2), stop_words='english',lowercase=True, max_df = 1.0, use_idf = False)),\n",
+    "        ])),\n",
+    "    ])),\n",
+    "    ('clf', SGDClassifier(n_jobs= -1, loss=\"hinge\")),\n",
+    "])\n",
+    "text_clf_SGDClassifier.fit(X_train, y_train) # Fitting with pipeline having SGD Classifier"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 794,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Pipeline(memory=None,\n",
+       "         steps=[('u1',\n",
+       "                 FeatureUnion(n_jobs=None,\n",
+       "                              transformer_list=[('tfdif_features',\n",
+       "                                                 Pipeline(memory=None,\n",
+       "                                                          steps=[('cv',\n",
+       "                                                                  TfidfVectorizer(analyzer=<function split_into_lemmas at 0x0000021999B9C620>,\n",
+       "                                                                                  binary=False,\n",
+       "                                                                                  decode_error='strict',\n",
+       "                                                                                  dtype=<class 'numpy.float64'>,\n",
+       "                                                                                  encoding='utf-8',\n",
+       "                                                                                  input='content',\n",
+       "                                                                                  lowercase=True,\n",
+       "                                                                                  max_df=1.0,\n",
+       "                                                                                  max_features=None,\n",
+       "                                                                                  min_df=...\n",
+       "                                                                                  tokenizer=None,\n",
+       "                                                                                  use_idf=True,\n",
+       "                                                                                  vocabulary=None))],\n",
+       "                                                          verbose=False))],\n",
+       "                              transformer_weights=None, verbose=False)),\n",
+       "                ('clf',\n",
+       "                 SVC(C=1.0, break_ties=False, cache_size=200, class_weight=None,\n",
+       "                     coef0=0.0, decision_function_shape='ovr', degree=3,\n",
+       "                     gamma='scale', kernel='linear', max_iter=-1,\n",
+       "                     probability=False, random_state=None, shrinking=True,\n",
+       "                     tol=0.001, verbose=False))],\n",
+       "         verbose=False)"
+      ]
+     },
+     "execution_count": 794,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "text_clf_SVC = Pipeline([\n",
+    "    ('u1', FeatureUnion([\n",
+    "        ('tfdif_features', Pipeline([\n",
+    "            ('cv', TfidfVectorizer(analyzer=split_into_lemmas, \n",
+    "                        ngram_range=(1,4), stop_words='english',lowercase=True, max_df = 1.0)),\n",
+    "        ])),\n",
+    "        ('tfdif_char', Pipeline([\n",
+    "            ('cv', TfidfVectorizer(analyzer='char',\n",
+    "                        ngram_range=(2,4), stop_words='english',lowercase=True, max_df = 1.0)),\n",
+    "        ])),\n",
+    "        ('tfdif_posTags', Pipeline([\n",
+    "            ('cv', TfidfVectorizer(analyzer=pos_tags, \n",
+    "                        ngram_range=(1,2), stop_words='english',lowercase=True, max_df = 1.0, use_idf = False)),\n",
+    "        ])),\n",
+    "    ])),\n",
+    "    ('clf', SVC(kernel='linear')),\n",
+    "\n",
+    "])\n",
+    "text_clf_SVC.fit(X_train, y_train) #Fitting the tweet with pipeline having SVC Model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 796,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "predicted_SVC = text_clf_SVC.predict(X_test) #Predicting on the test dataset for SVC Model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 799,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "predicted_SGDClassifier = text_clf_SGDClassifier.predict(X_test) # Predicting on the test dataset for SGD Classifier"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 801,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "              precision    recall  f1-score   support\n",
+      "\n",
+      "      female       0.83      0.85      0.84       305\n",
+      "        male       0.85      0.83      0.84       315\n",
+      "\n",
+      "    accuracy                           0.84       620\n",
+      "   macro avg       0.84      0.84      0.84       620\n",
+      "weighted avg       0.84      0.84      0.84       620\n",
+      "\n",
+      "              precision    recall  f1-score   support\n",
+      "\n",
+      "      female       0.80      0.89      0.84       305\n",
+      "        male       0.88      0.78      0.83       315\n",
+      "\n",
+      "    accuracy                           0.84       620\n",
+      "   macro avg       0.84      0.84      0.84       620\n",
+      "weighted avg       0.84      0.84      0.84       620\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "#Printing the Classificatio report\n",
+    "print (classification_report(y_test, predicted_SVC)) \n",
+    "print (classification_report(y_test, predicted_SGDClassifier))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 803,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Load Prediction Data\n",
+    "# Loading the dataset\n",
+    "csvTestData = pd.read_csv(\"Assessment2_data/test.csv\")\n",
+    "csvTestData[\"tweets\"] = np.nan"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 804,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "C:\\Users\\HPX360\\Anaconda3\\lib\\site-packages\\ipykernel_launcher.py:5: SettingWithCopyWarning: \n",
+      "A value is trying to be set on a copy of a slice from a DataFrame\n",
+      "\n",
+      "See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy\n",
+      "  \"\"\"\n",
+      "C:\\Users\\HPX360\\Anaconda3\\lib\\site-packages\\pandas\\core\\indexing.py:189: SettingWithCopyWarning: \n",
+      "A value is trying to be set on a copy of a slice from a DataFrame\n",
+      "\n",
+      "See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy\n",
+      "  self._setitem_with_indexer(indexer, value)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Loading the tweets into the dataframe\n",
+    "for index,row in csvTestData.iterrows():\n",
+    "    with open(\"Assessment2_data/data/\" + row['id'] +\".xml\", encoding=\"utf8\") as xml:\n",
+    "        content = xml.read()\n",
+    "        regString = re.findall('\\[CDATA\\[(.*?)\\]\\]', content)\n",
+    "        csvTestData['tweets'][index] = \",\".join(regString)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 805,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>gender</th>\n",
+       "      <th>tweets</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>d6b08022cdf758ead05e1c266649c393</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>@JJMSports what odds he stops whining and goes...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>9a989cb04766d5a89a65e8912d448328</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Bingay!!!! I won a cool handy tonight #cashmon...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2a1053a059d58fbafd3e782a8f7972c0</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>The cynical manipulation of voters' desire for...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>6032537900368aca3d1546bd71ecabd1</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>@9NowAU cannot convert b to object... on Sony ...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>d191280655be8108ec9928398ff5b563</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Cat Is a Kneading Maniac – Floppycats https://...</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                                 id  gender  \\\n",
+       "0  d6b08022cdf758ead05e1c266649c393     NaN   \n",
+       "1  9a989cb04766d5a89a65e8912d448328     NaN   \n",
+       "2  2a1053a059d58fbafd3e782a8f7972c0     NaN   \n",
+       "3  6032537900368aca3d1546bd71ecabd1     NaN   \n",
+       "4  d191280655be8108ec9928398ff5b563     NaN   \n",
+       "\n",
+       "                                              tweets  \n",
+       "0  @JJMSports what odds he stops whining and goes...  \n",
+       "1  Bingay!!!! I won a cool handy tonight #cashmon...  \n",
+       "2  The cynical manipulation of voters' desire for...  \n",
+       "3  @9NowAU cannot convert b to object... on Sony ...  \n",
+       "4  Cat Is a Kneading Maniac – Floppycats https://...  "
+      ]
+     },
+     "execution_count": 805,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "csvTestData = csvTestData.drop(['language'], axis=1) #droping language column from the test dataset\n",
+    "csvTestData.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 806,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "SVCpredictedTestLabels = text_clf_SVC.predict(csvTestData[\"tweets\"]) # Predicting the test labels with SVC Model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 807,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "SGDpredictedTestLables = text_clf_SGDClassifier.predict(csvTestData[\"tweets\"]) # Predicting the test labels with SGD Model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 808,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "csvTestData = csvTestData.drop([\"tweets\"], axis=1) # Dropping the tweet column"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 809,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Accuracy on test labels\n",
+    "testLables = pd.read_csv(\"Assessment2_data/test_labels.csv\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 810,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>gender</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>d6b08022cdf758ead05e1c266649c393</td>\n",
+       "      <td>male</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>9a989cb04766d5a89a65e8912d448328</td>\n",
+       "      <td>female</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2a1053a059d58fbafd3e782a8f7972c0</td>\n",
+       "      <td>male</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>6032537900368aca3d1546bd71ecabd1</td>\n",
+       "      <td>male</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>d191280655be8108ec9928398ff5b563</td>\n",
+       "      <td>male</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                                 id  gender\n",
+       "0  d6b08022cdf758ead05e1c266649c393    male\n",
+       "1  9a989cb04766d5a89a65e8912d448328  female\n",
+       "2  2a1053a059d58fbafd3e782a8f7972c0    male\n",
+       "3  6032537900368aca3d1546bd71ecabd1    male\n",
+       "4  d191280655be8108ec9928398ff5b563    male"
+      ]
+     },
+     "execution_count": 810,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "testLables.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 811,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "              precision    recall  f1-score   support\n",
+      "\n",
+      "      female       0.83      0.83      0.83       252\n",
+      "        male       0.82      0.82      0.82       248\n",
+      "\n",
+      "    accuracy                           0.82       500\n",
+      "   macro avg       0.82      0.82      0.82       500\n",
+      "weighted avg       0.82      0.82      0.82       500\n",
+      "\n",
+      "              precision    recall  f1-score   support\n",
+      "\n",
+      "      female       0.81      0.92      0.86       252\n",
+      "        male       0.91      0.77      0.84       248\n",
+      "\n",
+      "    accuracy                           0.85       500\n",
+      "   macro avg       0.86      0.85      0.85       500\n",
+      "weighted avg       0.86      0.85      0.85       500\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "print (classification_report(testLables.gender, SVCpredictedTestLabels)) #Checking accuracy on 100% test lables\n",
+    "print (classification_report(testLables.gender, SGDpredictedTestLables)) #Checking accuracy on 100% test lables"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 817,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>gender</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>d6b08022cdf758ead05e1c266649c393</td>\n",
+       "      <td>male</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>9a989cb04766d5a89a65e8912d448328</td>\n",
+       "      <td>female</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2a1053a059d58fbafd3e782a8f7972c0</td>\n",
+       "      <td>male</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>6032537900368aca3d1546bd71ecabd1</td>\n",
+       "      <td>male</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>d191280655be8108ec9928398ff5b563</td>\n",
+       "      <td>male</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                                 id  gender\n",
+       "0  d6b08022cdf758ead05e1c266649c393    male\n",
+       "1  9a989cb04766d5a89a65e8912d448328  female\n",
+       "2  2a1053a059d58fbafd3e782a8f7972c0    male\n",
+       "3  6032537900368aca3d1546bd71ecabd1    male\n",
+       "4  d191280655be8108ec9928398ff5b563    male"
+      ]
+     },
+     "execution_count": 817,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "csvTestData[\"gender\"] = SGDpredictedTestLables #Storing all the predicted lables from Best Model SGD.\n",
+    "csvTestData.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 822,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "csvTestData.to_csv(\"pred_labels.csv\", index=False)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
